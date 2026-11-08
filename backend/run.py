@@ -1,26 +1,33 @@
-#!/usr/bin/env python3
-"""
-Real-ESRGAN Web API 启动脚本
+#!/usr/bin/env python
+"""开发入口：``python run.py``（带热重载）。
+
+正式演示建议用仓库根目录的 ``start.ps1`` / ``start.sh``：
+它会先构建前端，再由这一个进程把界面和接口一起托管在一个端口上。
 """
 
-import uvicorn
+from __future__ import annotations
+
 import os
 import sys
 
-# 添加项目根目录到Python路径
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-if __name__ == "__main__":
-    print("🚀 启动 Real-ESRGAN Web API 服务...")
-    print("📖 API文档地址: http://localhost:8000/docs")
-    print("🔍 健康检查: http://localhost:8000/health")
-    print("⚡ 服务地址: http://localhost:8000")
-    print("-" * 50)
-    
+from app.config import settings  # noqa: E402
+
+
+def main() -> None:
+    import uvicorn
+
+    print(f"Real-ESRGAN Web  backend  http://{settings.host}:{settings.port}")
+    print(f"API 文档                  http://{settings.host}:{settings.port}/docs")
     uvicorn.run(
         "app.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,  # 开发模式下启用热重载
-        log_level="info"
+        host=settings.host,
+        port=settings.port,
+        reload=True,
+        log_level="info",
     )
+
+
+if __name__ == "__main__":
+    main()

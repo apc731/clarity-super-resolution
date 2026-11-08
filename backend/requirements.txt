@@ -1,14 +1,11 @@
+# Web 层依赖（不含 torch / Real-ESRGAN，安装步骤见 README「快速开始」）
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 python-multipart==0.0.6
-pillow==10.1.0
-aiofiles==23.2.1
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-python-dotenv==1.0.0
-pydantic==2.5.0
-pydantic-settings==2.1.0
-torch>=1.7.0
-torchvision>=0.8.0
-opencv-python>=4.5.0
-numpy>=1.19.0
+pillow>=10.1,<12
+numpy>=1.24,<3
+opencv-python>=4.8
+
+# 可选：人脸增强（装了才会出现「人脸修复」开关）
+# gfpgan>=1.3.8
+# facexlib>=0.3.0

@@ -13,6 +13,10 @@ frontend/dist/
 .data/
 *.log
 
+# 旧版本留下的产物目录（新代码写到 .data/，这两处只是本地历史，不入库）
+backend/app/uploads/
+backend/app/results/
+
 # Local config
 .env
 .env.local

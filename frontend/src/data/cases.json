@@ -1,0 +1,68 @@
+[
+  {
+    "slug": "anime-sunset",
+    "title": "插画 · 黄昏的海",
+    "note": "线条和色带最考验模型：糊掉的海平面被重新长出细节，云层没有出现油画感。",
+    "before": "/cases/anime-sunset-before.jpg",
+    "after": "/cases/anime-sunset-after.webp",
+    "model": "RealESRGAN_x4plus",
+    "outscale": 4.0,
+    "sourceWidth": 1728,
+    "sourceHeight": 1080,
+    "outputWidth": 6912,
+    "outputHeight": 4320,
+    "inferenceSeconds": 9.7,
+    "tiles": 12,
+    "tileSize": 512,
+    "device": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "focus": {
+      "x": 47,
+      "y": 68
+    },
+    "resultBytes": 27770091
+  },
+  {
+    "slug": "winter-branches",
+    "title": "实拍 · 冬天里的树枝",
+    "note": "512×256 的素材本身就缺信息，细枝之间的缝隙会被补上，但主体结构没有变形。",
+    "before": "/cases/winter-branches-before.jpg",
+    "after": "/cases/winter-branches-after.webp",
+    "model": "RealESRGAN_x4plus",
+    "outscale": 4.0,
+    "sourceWidth": 512,
+    "sourceHeight": 256,
+    "outputWidth": 2048,
+    "outputHeight": 1024,
+    "inferenceSeconds": 0.7,
+    "tiles": 1,
+    "tileSize": 512,
+    "device": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "focus": {
+      "x": 30,
+      "y": 32
+    },
+    "resultBytes": 3029808
+  },
+  {
+    "slug": "cosplay-group",
+    "title": "人像 · 群像合影",
+    "note": "人脸是硬指标：皮肤纹理和发丝被重建，五个人的轮廓都保持原样。",
+    "before": "/cases/cosplay-group-before.jpg",
+    "after": "/cases/cosplay-group-after.webp",
+    "model": "RealESRGAN_x4plus",
+    "outscale": 4.0,
+    "sourceWidth": 850,
+    "sourceHeight": 1327,
+    "outputWidth": 3400,
+    "outputHeight": 5308,
+    "inferenceSeconds": 5.6,
+    "tiles": 6,
+    "tileSize": 512,
+    "device": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "focus": {
+      "x": 62,
+      "y": 20
+    },
+    "resultBytes": 21375804
+  }
+]

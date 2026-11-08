@@ -1,53 +1,119 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-import os
+"""FastAPI 入口。
 
-# 创建FastAPI应用实例
+生产/演示模式下后端同时托管前端构建产物（``frontend/dist``），
+所以"一条命令起来"是真的只有一个进程、一个端口。
+开发模式下前端跑 Vite（:3000），通过 proxy 转发到这里的 :8000。
+"""
+
+from __future__ import annotations
+
+import logging
+import sys
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+
+from app.config import settings
+from app.api.routes import build_router
+from app.services.engine import UpscaleEngine
+from app.services.tasks import TaskManager
+
+
+def _configure_logging() -> None:
+    """Windows 控制台默认 GBK，日志里任何一个非 ASCII 字符都可能炸掉请求。
+
+    旧版本就是被 ``print("❌ ...")`` 这么搞挂的。这里把标准流切到 UTF-8
+    （无法切换时用 replace 兜底），并且统一走 logging，不再裸 print。
+    """
+    for stream_name in ("stdout", "stderr"):
+        stream = getattr(sys, stream_name, None)
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
+        except Exception:
+            pass
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s  %(levelname)-7s %(name)s  %(message)s",
+        datefmt="%H:%M:%S",
+        stream=sys.stdout,
+    )
+    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+
+
+_configure_logging()
+logger = logging.getLogger("realesrgan")
+
+settings.ensure_dirs()
+engine = UpscaleEngine(settings)
+tasks = TaskManager(settings, engine)
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    device = engine.device_info()
+    logger.info("Real-ESRGAN web app %s", settings.version)
+    logger.info("data dir      %s", settings.data_dir)
+    logger.info("device        %s (%s)", device.get("name"), device.get("precision", "-"))
+    logger.info("weights       %s", settings.weights_dir)
+    removed = tasks.purge_expired()
+    if removed:
+        logger.info("purged %s expired task(s)", removed)
+    yield
+
+
 app = FastAPI(
-    title="Real-ESRGAN Web API",
-    description="AI图像超分辨率增强服务",
-    version="1.0.0"
+    title="Real-ESRGAN Web",
+    description="本地运行的真实图像超分辨率应用",
+    version=settings.version,
+    lifespan=lifespan,
 )
 
-# 配置CORS中间件，允许前端跨域访问
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 在生产环境中应该设置为具体的前端域名
-    allow_credentials=True,
+    allow_origins=list(settings.cors_origins),
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 创建必要的目录
-os.makedirs("uploads", exist_ok=True)
-os.makedirs("results", exist_ok=True)
+app.include_router(build_router(settings, engine, tasks))
 
-# 静态文件服务 - 用于提供处理后的图像
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
-app.mount("/results", StaticFiles(directory="results"), name="results")
 
-# 导入API路由 - 直接导入避免__init__.py问题
-from app.api.image_router import router
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(_: Request, exc: Exception) -> JSONResponse:
+    logger.exception("unhandled error")
+    return JSONResponse(status_code=500, content={"detail": f"服务端出错了：{type(exc).__name__}: {exc}"})
 
-# 注册路由
-app.include_router(router, prefix="/api", tags=["图像处理"])
 
-@app.get("/")
-async def root():
-    """API根路径"""
-    return {
-        "message": "Real-ESRGAN Web API",
-        "version": "1.0.0",
-        "docs": "/docs",
-        "status": "running"
-    }
+@app.get("/", include_in_schema=False)
+def index():
+    index_file = settings.frontend_dist / "index.html"
+    if index_file.is_file():
+        return FileResponse(index_file, headers={"Cache-Control": "no-cache"})
+    return RedirectResponse(url="/docs")
 
-@app.get("/health")
-async def health_check():
-    """健康检查端点"""
-    return {"status": "healthy", "service": "realesrgan-api"}
+
+# 前端构建产物（放在最后，避免抢占 /api 路由）
+if (settings.frontend_dist / "index.html").is_file():
+    app.mount("/", StaticFiles(directory=settings.frontend_dist, html=True), name="spa")
+    logger.info("serving frontend from %s", settings.frontend_dist)
+else:
+    logger.warning("frontend build not found at %s (run `npm run build` in frontend/)", settings.frontend_dist)
+
+
+def main() -> None:
+    import uvicorn
+
+    uvicorn.run(
+        "app.main:app",
+        host=settings.host,
+        port=settings.port,
+        log_level="info",
+    )
+
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    main()
