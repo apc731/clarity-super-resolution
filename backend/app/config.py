@@ -6,8 +6,9 @@
 
 from __future__ import annotations
 
+import mimetypes
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -15,6 +16,10 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 REPO_ROOT = BACKEND_DIR.parent
 
 __version__ = "2.0.0"
+
+# Windows 的 MIME 表里没有 webp，静态文件会被当成 text/plain 发出去
+for _mime, _ext in (("image/webp", ".webp"), ("image/avif", ".avif"), ("image/svg+xml", ".svg")):
+    mimetypes.add_type(_mime, _ext)
 
 
 def _load_dotenv() -> None:

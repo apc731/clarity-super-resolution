@@ -54,7 +54,7 @@ export REALESRGAN_ROOT=$(cd ../Real-ESRGAN && pwd)   # Windows: $env:REALESRGAN_
 
 # 2) 前端 + 起服务（一条命令，会自动构建前端）
 cd frontend && npm install && cd ..
-./start.sh            # Windows: .\start.ps1
+./start.sh            # Windows: .\start.ps1（或者双击 start.cmd）
 ```
 
 打开 <http://127.0.0.1:8000>。首次使用某个模型时会自动下载权重（x4plus 约 64 MB）。
@@ -172,7 +172,11 @@ samples/                 # 三张真实测试图，案例页就是它们跑出�
 ```bash
 ./dev.ps1                 # 后端 reload + Vite HMR（前端 :3000，代理 /api）
 ./start.ps1 -Rebuild      # 生产模式：一个进程、一个端口，界面和接口一起
+start.cmd                 # Windows 双击启动（自动绕过执行策略）
 ```
+
+录一段 6 秒演示的建议顺序（1080p 一张约 10 秒，节奏刚好）：
+首页停 1 秒 → 选图 → 处理中看清「第 N/12 块」在动 → 结果页拖滑块 → ⌘/Ctrl + 滚轮推到 200% 看细节。
 
 其它脚本：
 
