@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "../../../../Real-ESRGAN"
+		},
+		{
+			"path": "../../.."
+		}
+	],
+	"settings": {}
+}

@@ -1,0 +1,8 @@
+# Web框架依赖 - 最小化安装，避免与Real-ESRGAN冲突
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+aiofiles==23.2.1
+
+# 以下包你的环境中已存在，无需重新安装：
+# torch, torchvision, opencv-python, numpy, pillow, requests
