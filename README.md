@@ -3,6 +3,8 @@
 把一张图放大四倍——真的加载模型、真的推理、真的产出 6912×4320 的 PNG。
 推理跑在你自己机器的显卡上，一条命令起服务，界面和接口在同一个端口。
 
+**在线看案例：<https://apc731.github.io/clarity-super-resolution/>** · 源码：<https://github.com/apc731/clarity-super-resolution> · [6 秒真实演示视频](docs/demo-6s.mp4)
+
 ![首页](docs/screenshots/01-home.png)
 
 <table>
@@ -149,6 +151,9 @@ scripts/
   api_check.py           # 接口约定：坏输入必须是 4xx + 人话
   build_case_assets.py   # 跑一组真实推理，生成案例页素材与数据
   shoot.mjs              # 用系统 Chrome（CDP，零依赖）拍作品集截图
+  record_demo.mjs        # CDP 录屏：真实进度 → 拖滑块 → 200% 放大
+  encode_demo.py         # 把录屏帧编成 6 秒 H.264 MP4
+docs/                    # GitHub Pages 的发布目录（静态案例页 + 截图 + 演示视频）
 samples/                 # 三张真实测试图，案例页就是它们跑出来的
 ```
 
@@ -175,13 +180,21 @@ samples/                 # 三张真实测试图，案例页就是它们跑出�
 start.cmd                 # Windows 双击启动（自动绕过执行策略）
 ```
 
-录一段 6 秒演示的建议顺序（1080p 一张约 10 秒，节奏刚好）：
-首页停 1 秒 → 选图 → 处理中看清「第 N/12 块」在动 → 结果页拖滑块 → ⌘/Ctrl + 滚轮推到 200% 看细节。
+[![6 秒演示](docs/screenshots/06-demo-poster.jpg)](docs/demo-6s.mp4)
+
+`docs/demo-6s.mp4` 是 6 秒 / 24fps / H.264 的**真实录屏**：处理中的分块进度在涨 → 结果页拖滑块 → 推到 200% 看细节。
+由脚本驱动真实页面录制（Chrome CDP 抓帧 + ffmpeg 编码），不是补间动画：
+
+```bash
+node scripts/record_demo.mjs --image samples/sunset-1728x1080.jpg --as sunset.jpg
+python scripts/encode_demo.py    # 需要 pip install imageio-ffmpeg
+```
 
 其它脚本：
 
 ```bash
 python scripts/smoke_test.py --scale 2                    # 端到端冒烟测试
+python scripts/api_check.py                            # 坏输入必须是 4xx + 人话
 python scripts/build_case_assets.py --base http://127.0.0.1:8000   # 重新生成案例素材（会跑真实推理）
 node scripts/shoot.mjs --image portrait.jpg --as portrait.jpg      # 拍作品集截图到 docs/screenshots
 ```
@@ -197,16 +210,24 @@ docker build -t clarity .
 docker run --gpus all -p 8000:8000 -v clarity-data:/data clarity
 ```
 
-## 静态案例页（Vercel）
+## 静态案例页（已部署）
 
-`#/cases` 是纯静态页面，只展示真实产物、不做推理：
+**线上：<https://apc731.github.io/clarity-super-resolution/>**
+
+`#/cases` 是纯静态页面，只展示真实产物、不做推理。构建时 Vite 用相对 `base`，
+同一份产物挂在域名根目录、仓库子路径或 CloudBase 子目录都能直接打开。
+
+已发布到 GitHub Pages，来源是 `main` 分支的 `docs/` 目录。更新方式：
 
 ```bash
-cd frontend && npm run build:static    # 只打案例页
+cd frontend && npm run build:static
+# 把 frontend/dist 的内容同步到仓库 docs/（保留 docs/screenshots 与 docs/demo-6s.mp4），提交即自动发布
 ```
 
-仓库根目录的 `vercel.json` 已经配好（构建 `frontend`、输出 `frontend/dist`）。
-也可以直接在 Vercel 里把 **Root Directory** 设成 `frontend`、构建命令换成 `npm run build:static`。
+`vercel.json` 也配好了（构建 `frontend`、输出 `frontend/dist`），想换 Vercel 时直接导入仓库即可；
+或在 Vercel 里把 **Root Directory** 设成 `frontend`、构建命令换成 `npm run build:static`。
+同一份产物还上传到了 CloudBase 静态托管的 `/clarity/` 子目录（没有覆盖该域名原有的任何文件），
+但它的默认测试域名会先弹一个「页面访问提示」拦截页，所以对外链接以 GitHub Pages 为准。
 
 ## 已知限制
 
