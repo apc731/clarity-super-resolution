@@ -3,7 +3,7 @@
 把一张图放大四倍——真的加载模型、真的推理、真的产出 6912×4320 的 PNG。
 推理跑在你自己机器的显卡上，一条命令起服务，界面和接口在同一个端口。
 
-**在线看案例：<https://apc731.github.io/clarity-super-resolution/>** · 源码：<https://github.com/apc731/clarity-super-resolution> · [6 秒真实演示视频](docs/demo-6s.mp4)
+**在线看案例：<https://clarity-super-resolution.vercel.app/>** · 源码：<https://github.com/apc731/clarity-super-resolution> · [6 秒真实演示视频](docs/demo-6s.mp4)
 
 ![首页](docs/screenshots/01-home.png)
 
@@ -94,6 +94,7 @@ cd frontend && npm install && cd ..
 - **浏览器内推理掉档**：WebGPU / WASM 跑量化模型确实能纯静态部署，但模型要么小一号、要么精度掉一截，
   访客点开看到又慢又糊的结果，比看不到链接更伤。
 - **所以拆成两件事**：推理在本地（这个仓库的应用），线上只放**真实产物**（`#/cases` 页面）。
+  这里说的"不做在线服务"指不做**在线推理**；静态案例页本身托管在 Vercel 上，不需要 GPU。
 
 案例页里每一组对比图都是这个仓库的代码真实跑出来的，连耗时、分块数、输出体积都来自同一次任务
 （`scripts/build_case_assets.py` 生成，不是手工填的）。
@@ -102,10 +103,10 @@ cd frontend && npm install && cd ..
 
 | 方案 | 结论 |
 | --- | --- |
-| Vercel + Serverless 推理 | 不可行：依赖体积 + 无 GPU |
+| Vercel + Serverless **推理** | 不可行：依赖体积 + 无 GPU |
 | 浏览器内 WebGPU 推理 | 可行但画质/速度双降，观感差 |
 | 云 GPU 常驻服务 | 成本与自己用不成比例 |
-| **本地应用 + 静态案例页** | 采用 |
+| **本地推理 + Vercel 托管静态案例页** | 采用 |
 
 ---
 
@@ -210,24 +211,25 @@ docker build -t clarity .
 docker run --gpus all -p 8000:8000 -v clarity-data:/data clarity
 ```
 
-## 静态案例页（已部署）
+## 静态案例页（已部署在 Vercel）
 
-**线上：<https://apc731.github.io/clarity-super-resolution/>**
+**线上：<https://clarity-super-resolution.vercel.app/>**
 
 `#/cases` 是纯静态页面，只展示真实产物、不做推理。构建时 Vite 用相对 `base`，
-同一份产物挂在域名根目录、仓库子路径或 CloudBase 子目录都能直接打开。
+同一份产物挂在域名根目录或任意子路径都能直接打开。
 
-已发布到 GitHub Pages，来源是 `main` 分支的 `docs/` 目录。更新方式：
+部署用 Vercel CLI 直接上传构建产物（产物已构建好，不跑远端构建）：
 
 ```bash
-cd frontend && npm run build:static
-# 把 frontend/dist 的内容同步到仓库 docs/（保留 docs/screenshots 与 docs/demo-6s.mp4），提交即自动发布
+cd frontend && npm run build:static       # 产出 dist/
+# 把 dist/ 的内容放进一个只有 index.html + assets/ + cases/ 的目录
+vercel deploy --prod --yes --name clarity-super-resolution
 ```
 
-`vercel.json` 也配好了（构建 `frontend`、输出 `frontend/dist`），想换 Vercel 时直接导入仓库即可；
-或在 Vercel 里把 **Root Directory** 设成 `frontend`、构建命令换成 `npm run build:static`。
-同一份产物还上传到了 CloudBase 静态托管的 `/clarity/` 子目录（没有覆盖该域名原有的任何文件），
-但它的默认测试域名会先弹一个「页面访问提示」拦截页，所以对外链接以 GitHub Pages 为准。
+仓库根的 `vercel.json` 是给「导入 Git 仓库到 Vercel」用的（构建 `frontend`、输出 `frontend/dist`）；
+也可以在 Vercel 控制台把 **Root Directory** 设成 `frontend`、构建命令换成 `npm run build:static`。
+
+备用镜像：<https://apc731.github.io/clarity-super-resolution/>（GitHub Pages，来源是 `main` 分支的 `docs/`）。
 
 ## 已知限制
 
