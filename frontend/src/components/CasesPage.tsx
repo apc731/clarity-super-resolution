@@ -27,6 +27,9 @@ interface CaseEntry {
 
 const cases = casesData as CaseEntry[];
 
+// 案例素材放在 public/cases，路径要跟着 Vite 的 base 走（子目录部署时才不会 404）
+const asset = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
+
 const STEPS = [
   {
     title: "上传就先校验",
@@ -99,14 +102,14 @@ export default function CasesPage({ onOpenStudio }: { onOpenStudio?: () => void 
               </div>
             </div>
             <CompareSlider
-              beforeSrc={item.before}
-              afterSrc={item.after}
+              beforeSrc={asset(item.before)}
+              afterSrc={asset(item.after)}
               ratio={item.sourceWidth / item.sourceHeight}
               beforeMeta={formatDimensions(item.sourceWidth, item.sourceHeight)}
               afterMeta={formatDimensions(item.outputWidth, item.outputHeight)}
               caption="拖动圆点对比 · ⌘/Ctrl + 滚轮放大"
             />
-            <DetailPeek beforeSrc={item.before} afterSrc={item.after} focus={item.focus} />
+            <DetailPeek beforeSrc={asset(item.before)} afterSrc={asset(item.after)} focus={item.focus} />
             <p className="small" style={{ marginTop: 12, maxWidth: 680 }}>
               {item.note}
             </p>
@@ -183,6 +186,14 @@ export default function CasesPage({ onOpenStudio }: { onOpenStudio?: () => void 
                 <span className="code-block__comment"># macOS / Linux</span>
                 <span>./start.sh</span>
               </code>
+              <a
+                className="link-arrow"
+                href="https://github.com/apc731/clarity-super-resolution"
+                target="_blank"
+                rel="noreferrer"
+              >
+                在 GitHub 看源码 <ArrowRight size={15} />
+              </a>
               {onOpenStudio && (
                 <button type="button" className="link-arrow" onClick={onOpenStudio}>
                   回到工作台 <ArrowRight size={15} />
